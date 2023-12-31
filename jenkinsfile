@@ -1,0 +1,43 @@
+pipeline{
+    agent { node { label 'built-in'
+    customWorkspace '/mnt/myjenkins/' } 
+    }
+        stages{
+            stage("git checkput"){
+                steps{
+                    echo "git clone "
+                    sh 'rm -rf django-todo-cicd'
+                    sh 'git clone https://github.com/LondheShubham153/django-todo-cicd.git'
+                    
+                }
+                
+                
+            }
+            stage("docker build"){
+                steps{
+                    script{
+                    sh 'docker build -t mynote /mnt/myjenkins/django-todo-cicd'    
+                    }
+                    
+                }
+            }
+            stage("docker tag"){
+                steps{
+                    script{
+                    sh 'docker tag mynote piyush/mynote:latest'
+                    }
+                    
+                }
+            }
+            stage('Push image to Hub') {
+               steps {
+                    script {
+                        withCredentials([string(credentialsId: 'piyush', variable: 'dockerhubpwd')]) {
+                        sh "sudo docker login -u piyush -p ${dockerhubpwd}"
+                        sh "sudo docker push piyush/mynote"
+                    }
+                }
+            }
+        }
+    }
+}
